@@ -1,0 +1,132 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Order Successful - Foodie Hub</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fff8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .success-box {
+            background-color: white;
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+            text-align: center;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .success-icon {
+            font-size: 65px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            font-size: 18px;
+            margin-bottom: 25px;
+        }
+
+        .order-details {
+            background-color: #fff3e0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        .order-details p {
+            margin: 10px 0;
+        }
+
+        .order-details strong {
+            color: #d84315;
+        }
+
+        .home-button {
+            display: inline-block;
+            background-color: #ff6b35;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .home-button:hover {
+            background-color: #d84315;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="success-box">
+
+        <div class="success-icon">✅</div>
+
+        <h1>Order Placed Successfully!</h1>
+
+        <p class="message">
+            Thank you for ordering from Foodie Hub! 🍔
+        </p>
+
+        <div class="order-details">
+
+            <p>
+                <strong>Customer:</strong>
+                {{ order.name }}
+            </p>
+
+            <p>
+                <strong>Mobile:</strong>
+                {{ order.mobile }}
+            </p>
+
+            <p>
+                <strong>Food:</strong>
+                {{ order.food }}
+            </p>
+
+            <p>
+                <strong>Quantity:</strong>
+                {{ order.quantity }}
+            </p>
+
+            <p>
+                <strong>Order Time:</strong>
+                {{ order.date }}
+            </p>
+
+        </div>
+
+        <a href="/" class="home-button">
+            Back to Home
+        </a>
+
+    </div>
+
+</body>
+</html>
+```
