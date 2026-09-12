@@ -1,19 +1,25 @@
 """
-Unit and integration tests for the Disaster Recovery Health Status Service.
+Unit and integration tests for the Disaster Recovery Health Status Service
+and the Flask Food Ordering Application.
 """
 
 import json
 import os
+import shutil
+import sys
+import tempfile
 import threading
 import unittest
 from http.server import HTTPServer
 from urllib.error import HTTPError
 from urllib.request import urlopen
 
-# Ensure src is in python path
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Ensure repo root and src are on sys.path
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
+import app as flask_app
 from src.app import HealthRequestHandler, get_system_health
 
 
@@ -68,7 +74,7 @@ class TestHealthLogic(unittest.TestCase):
 
 
 class TestHealthServiceHTTP(unittest.TestCase):
-    """HTTP endpoint integration tests."""
+    """HTTP endpoint integration tests for DR health service (src/app.py)."""
 
     @classmethod
     def setUpClass(cls):
@@ -146,6 +152,70 @@ class TestHealthServiceHTTP(unittest.TestCase):
             urlopen(url)
         self.assertEqual(ctx.exception.code, 404)
         ctx.exception.close()
+
+
+class TestFlaskFoodOrderingApp(unittest.TestCase):
+    """Unit tests for the Flask Food Ordering application (app.py)."""
+
+    def setUp(self):
+        flask_app.app.config["TESTING"] = True
+        self.client = flask_app.app.test_client()
+
+        # Isolate orders file in a temporary folder
+        self.test_dir = tempfile.mkdtemp()
+        self.temp_orders_file = os.path.join(self.test_dir, "orders.json")
+        self.orig_orders_file = flask_app.ORDERS_FILE
+        flask_app.ORDERS_FILE = self.temp_orders_file
+
+    def tearDown(self):
+        flask_app.ORDERS_FILE = self.orig_orders_file
+        shutil.rmtree(self.test_dir, ignore_errors=True)
+
+    def test_home_page_renders_successfully(self):
+        """Verifies GET / renders index.html with 200 OK."""
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        content = response.data.decode("utf-8")
+        self.assertIn("Food Order", content)
+
+    def test_order_creation_success(self):
+        """Verifies POST /order saves the order and renders success page."""
+        form_data = {
+            "name": "Sarah Connor",
+            "mobile": "5551234567",
+            "food": "Pepperoni Pizza",
+            "quantity": "2"
+        }
+        response = self.client.post("/order", data=form_data)
+        self.assertEqual(response.status_code, 200)
+
+        # Check HTML response
+        content = response.data.decode("utf-8")
+        self.assertIn("Order Successful", content)
+        self.assertIn("Sarah Connor", content)
+
+        # Check JSON persistence
+        self.assertTrue(os.path.exists(self.temp_orders_file))
+        with open(self.temp_orders_file, "r", encoding="utf-8") as file:
+            saved_orders = json.load(file)
+
+        self.assertEqual(len(saved_orders), 1)
+        self.assertEqual(saved_orders[0]["name"], "Sarah Connor")
+        self.assertEqual(saved_orders[0]["food"], "Pepperoni Pizza")
+        self.assertEqual(saved_orders[0]["quantity"], "2")
+        self.assertIn("date", saved_orders[0])
+
+    def test_multiple_orders_accumulate(self):
+        """Verifies subsequent orders append to existing orders list."""
+        self.client.post("/order", data={"name": "User 1", "mobile": "111", "food": "Pasta", "quantity": "1"})
+        self.client.post("/order", data={"name": "User 2", "mobile": "222", "food": "Salad", "quantity": "3"})
+
+        with open(self.temp_orders_file, "r", encoding="utf-8") as file:
+            saved_orders = json.load(file)
+
+        self.assertEqual(len(saved_orders), 2)
+        self.assertEqual(saved_orders[0]["name"], "User 1")
+        self.assertEqual(saved_orders[1]["name"], "User 2")
 
 
 if __name__ == "__main__":
