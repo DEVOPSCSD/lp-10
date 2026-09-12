@@ -1,0 +1,78 @@
+# ==============================================================================
+# Prometheus Disaster Recovery Monitoring Configuration
+# DevOps-Based Disaster Recovery System
+# ==============================================================================
+
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+  scrape_timeout: 5s
+  external_labels:
+    monitor: 'disaster-recovery-telemetry'
+    environment: 'production'
+
+# Alertmanager configuration for incident triggers
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Alerting rule definitions
+rule_files:
+  - 'alerts/dr_rules.yml'
+
+scrape_configs:
+  # ----------------------------------------------------------------------------
+  # 1. Primary Region Application Health
+  # ----------------------------------------------------------------------------
+  - job_name: 'primary-region-app'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:8080', 'primary-app.internal:8080']
+        labels:
+          region: 'us-east-1'
+          tier: 'primary'
+          role: 'active-production'
+
+  # ----------------------------------------------------------------------------
+  # 2. Secondary Region Standby Application Health
+  # ----------------------------------------------------------------------------
+  - job_name: 'secondary-region-app'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['secondary-app.internal:8080']
+        labels:
+          region: 'us-west-2'
+          tier: 'secondary'
+          role: 'warm-standby'
+
+  # ----------------------------------------------------------------------------
+  # 3. Database Replication Telemetry & RPO Monitoring
+  # ----------------------------------------------------------------------------
+  - job_name: 'postgres-replication-lag'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['db-exporter.internal:9187']
+        labels:
+          cluster: 'production-postgres'
+          monitored_metric: 'replication_lag_bytes'
+
+  # ----------------------------------------------------------------------------
+  # 4. External Synthetic Probes (Blackbox Exporter)
+  # ----------------------------------------------------------------------------
+  - job_name: 'synthetic-blackbox-probes'
+    metrics_path: '/probe'
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - 'http://primary.service.internal:8080/healthz'
+          - 'http://secondary.service.internal:8080/healthz'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'blackbox-exporter:9115'
