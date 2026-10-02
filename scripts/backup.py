@@ -33,12 +33,13 @@ def perform_backup(source=SOURCE, backup_folder=BACKUP_FOLDER):
 
     shutil.copy2(source, backup_file)
 
-    # Also keep latest_backup.json synchronized if target directory is set
-    try:
-        os.makedirs(BACKUP_DIR, exist_ok=True)
-        shutil.copy2(source, BACKUP_FILE)
-    except Exception:
-        pass
+    # Only sync latest_backup.json when performing standard root backup
+    if backup_folder == BACKUP_FOLDER:
+        try:
+            os.makedirs(BACKUP_DIR, exist_ok=True)
+            shutil.copy2(source, BACKUP_FILE)
+        except Exception:
+            pass
 
     print("================================")
     print("BACKUP SUCCESSFUL")
@@ -57,8 +58,10 @@ def backup(data_file=DATA_FILE, backup_dir=BACKUP_DIR):
     if os.path.exists(data_file):
         shutil.copy(data_file, backup_file)
         print(f"[{datetime.now()}] Backup created successfully at {backup_file}")
-        # Maintain timestamped backup for backwards compatibility
-        perform_backup(source=data_file, backup_folder=BACKUP_FOLDER)
+        # Maintain timestamped backup in specified backup_dir
+        perform_backup(source=data_file, backup_folder=backup_dir)
+        if backup_dir == BACKUP_DIR and os.path.exists(BACKUP_FOLDER):
+            perform_backup(source=data_file, backup_folder=BACKUP_FOLDER)
     else:
         # Create initial default backup if none exists
         sample_data = [{
