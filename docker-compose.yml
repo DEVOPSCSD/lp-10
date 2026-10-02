@@ -1,4 +1,4 @@
-services:
+﻿services:
   web:
     build:
       context: .
@@ -9,3 +9,20 @@ services:
     volumes:
       - ./data:/app/data
     restart: always
+    networks:
+      - dr-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-container
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: always
+    networks:
+      - dr-network
+
+networks:
+  dr-network:
+    driver: bridge
