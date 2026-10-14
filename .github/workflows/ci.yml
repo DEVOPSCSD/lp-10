@@ -39,4 +39,9 @@ jobs:
 
       - name: Run automated tests with pytest
         run: |
-          pytest -v
+          pytest -v --ignore=tests/e2e
+
+      - name: Post-Failover UI Smoke Test
+        run: |
+          pip install -r requirements-test.txt
+          python -m pytest -v tests/e2e/test_failover_ui.py
