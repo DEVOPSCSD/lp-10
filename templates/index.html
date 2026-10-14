@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -156,6 +155,30 @@
             padding: 18px;
             margin-top: 30px;
         }
+
+        .health-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 6px 16px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-indicator-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 6px #4caf50;
+        }
     </style>
 </head>
 
@@ -165,6 +188,11 @@
     <header>
         <h1>🍔 Foodie Hub</h1>
         <p>Delicious Food Delivered to Your Door</p>
+
+        <div id="health-status-indicator" class="health-status-indicator" data-status="{{ 'UP' if is_healthy is not defined or is_healthy else 'DOWN' }}" data-testid="health-status-indicator">
+            <span class="status-indicator-dot"></span>
+            <span id="health-status-badge" class="health-status-badge">System Status: {{ health_status|default('Operational (Active Secondary)') }}</span>
+        </div>
 
         <nav>
             <a href="#home">Home</a>
@@ -274,4 +302,3 @@
 
 </body>
 </html>
-```

@@ -1,4 +1,4 @@
-﻿from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response
 import os
 import json
 import time
@@ -14,7 +14,17 @@ ORDERS_FILE = "data/orders.json"
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    region = os.getenv("APP_REGION", "secondary-us-west-2")
+    health_text = (
+        "Operational (Active Secondary)" if is_healthy
+        else "Degraded (Unhealthy)"
+    )
+    return render_template(
+        "index.html",
+        is_healthy=is_healthy,
+        health_status=health_text,
+        region=region
+    )
 
 # JSON Health check endpoint
 @app.route("/health", methods=["GET"])
